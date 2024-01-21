@@ -53,11 +53,18 @@ def pick_book_of_the_week():
     conn = sqlite3.connect('bookwarrior.db')
     c = conn.cursor()
 
-    # Select books that meet the criteria and haven't been picked before
-    c.execute("SELECT * FROM books WHERE pages <= ? AND LOWER(format) = ? AND title NOT IN (?)", 
-              (max_pages, format_choice, ','.join('?' * len(picked_books))), picked_books)
-    eligible_books = c.fetchall()
+    # Dynamically build the query
+    query = "SELECT * FROM books WHERE pages <= ? AND LOWER(format) = ?"
+    params = [max_pages, format_choice]
 
+    if picked_books:
+        placeholders = ','.join('?' * len(picked_books))
+        query += " AND title NOT IN ({})".format(placeholders)
+        params.extend(picked_books)
+
+    c.execute(query, params)
+    eligible_books = c.fetchall()
+    
     conn.close()
 
     if not eligible_books:
