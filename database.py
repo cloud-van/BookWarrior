@@ -1,4 +1,6 @@
 import sqlite3
+import random
+import math
 
 def add_book():
    title = input("Enter book title: ")
@@ -36,6 +38,46 @@ def view_library():
     # Close the database connection
     conn.close()
 
+def pick_book_of_the_week():
+    max_pages = int(input("Around how many pages? "))
+    format_choice = input("Digital or Physical? ").lower()
+
+    # Read the already picked books
+    try:
+        with open("picked_books.txt", "r") as file:
+            picked_books = file.read().splitlines()
+    except FileNotFoundError:
+        picked_books = []
+
+    # Connect to the database
+    conn = sqlite3.connect('bookwarrior.db')
+    c = conn.cursor()
+
+    # Select books that meet the criteria and haven't been picked before
+    c.execute("SELECT * FROM books WHERE pages <= ? AND LOWER(format) = ? AND title NOT IN (?)", 
+              (max_pages, format_choice, ','.join('?' * len(picked_books))), picked_books)
+    eligible_books = c.fetchall()
+
+    conn.close()
+
+    if not eligible_books:
+        print("No books found that meet your criteria.")
+        return
+
+    # Pick a random book
+    chosen_book = random.choice(eligible_books)
+    title, _, pages, _, _ = chosen_book
+
+    # Calculate pages per week
+    pages_per_week = math.ceil(pages / 7)
+
+    # Store the chosen book
+    with open("picked_books.txt", "a") as file:
+        file.write(title + "\n")
+
+    print(f"Your Book-of-the-Week will be {title}, you will need to reach {pages_per_week} pages per week to finish it.")
+
+
 def main_menu():
     while True:
         print("\nMain Menu:")
@@ -52,7 +94,7 @@ def main_menu():
         elif choice == '2':
             view_library()
         elif choice == '3':
-            # Code for Pick Book-of-the-Week
+            pick_book_of_the_week()
             pass
         elif choice == '4':
             # Code for Book Notes
