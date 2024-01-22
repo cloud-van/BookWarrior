@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox, simpledialog
+from database import add_book, view_library, pick_book_of_the_week
 import sqlite3
 import random
 import math
@@ -76,6 +77,18 @@ def view_library():
     conn.close()
     return all_books
 
+def pick_book_of_the_week_gui():
+    max_pages = simpledialog.askinteger("Book-of-the-Week", "Around how many pages?")
+    format_choice = simpledialog.askstring("Book-of-the-Week", "Digital or Physical?").lower()
+
+    book_of_week = pick_book_of_the_week(max_pages, format_choice)
+    if book_of_week:
+        title, pages = book_of_week
+        pages_per_week = math.ceil(pages / 7)
+        messagebox.showinfo("Book-of-the-Week", f"Your Book-of-the-Week will be '{title}', you will need to reach {pages_per_week} pages per week to finish it.")
+    else:
+        messagebox.showinfo("Book-of-the-Week", "No books found that meet your criteria.")
+
 # Main menu window
 def main_menu_window():
     window = tk.Tk()
@@ -96,6 +109,11 @@ def main_menu_window():
     # Create and pack the "View Library" button
     view_library_button = tk.Button(window, text="View Library", command=view_library_gui, width=button_width, height=button_height, font=button_font)
     view_library_button.pack(pady=10)  # pady adds some vertical space around the button
+
+    # Create and pack the "Book of the Week" button
+    book_of_week_button = tk.Button(window, text="Pick Book-of-the-Week", command=pick_book_of_the_week_gui, width=button_width, height=button_height, font=button_font)
+    book_of_week_button.pack(pady=10)
+
     window.mainloop()
 
 if __name__ == "__main__":
