@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import *
+from tkinter import messagebox, simpledialog
 import sqlite3
 import random
 import math
@@ -81,9 +81,21 @@ def main_menu_window():
     window = tk.Tk()
     window.title("BookWarrior")
 
-    tk.Button(window, text="Add a Book", command=add_book_gui).pack()
-    tk.Button(window, text="View Library", command=view_library_gui).pack()
+    # Set the size of the window
+    window.geometry("800x600") # Example size: 800 width and 600 height
 
+    # Configure button size and font
+    button_width = 20 # Width of the button
+    button_height = 2 # Height of the button 
+    button_font = ('Arial', 14) # Font type and size
+
+    # Create and pack the "Add a Book" button
+    add_book_button = tk.Button(window, text="Add a Book", command=add_book_gui, width=button_width, height=button_height, font=button_font)
+    add_book_button.pack(pady=10)  # pady adds some vertical space around the button
+
+    # Create and pack the "View Library" button
+    view_library_button = tk.Button(window, text="View Library", command=view_library_gui, width=button_width, height=button_height, font=button_font)
+    view_library_button.pack(pady=10)  # pady adds some vertical space around the button
     window.mainloop()
 
 if __name__ == "__main__":
