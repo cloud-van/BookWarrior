@@ -60,6 +60,21 @@ def view_library_gui():
 
     tk.Label(view_window, text=text).pack()
 
+def pick_book_of_the_week_gui():
+    # Function to interact with the user and call pick_book_of_the_week
+    max_pages = simpledialog.askinteger("Book-of-the-Week", "Around how many pages?")
+    if max_pages is None:  # User closed the dialog or clicked cancel
+        return
+
+    format_choice = simpledialog.askstring("Book-of-the-Week", "Digital or Physical?")
+    if format_choice is None:  # User closed the dialog or clicked cancel
+        return
+
+    format_choice = format_choice.lower()
+    title, pages = pick_book_of_the_week(max_pages, format_choice)
+    pages_per_week = math.ceil(pages / 7)
+    messagebox.showinfo("Book-of-the-Week", f"Your Book-of-the-Week will be '{title}', you will need to reach {pages_per_week} pages per week to finish it.")
+
 # Function to add a book to the database
 def add_book(title, genre, pages, format, library):
     conn = sqlite3.connect('bookwarrior.db')
@@ -77,17 +92,44 @@ def view_library():
     conn.close()
     return all_books
 
-def pick_book_of_the_week_gui():
-    max_pages = simpledialog.askinteger("Book-of-the-Week", "Around how many pages?")
-    format_choice = simpledialog.askstring("Book-of-the-Week", "Digital or Physical?").lower()
+def pick_book_of_the_week(max_pages, format_choice):
+    # Read the already picked books
+    try:
+        with open("picked_books.txt", "r") as file:
+            picked_books = file.read().splitlines()
+    except FileNotFoundError:
+        picked_books = []
 
-    book_of_week = pick_book_of_the_week(max_pages, format_choice)
-    if book_of_week:
-        title, pages = book_of_week
-        pages_per_week = math.ceil(pages / 7)
-        messagebox.showinfo("Book-of-the-Week", f"Your Book-of-the-Week will be '{title}', you will need to reach {pages_per_week} pages per week to finish it.")
-    else:
-        messagebox.showinfo("Book-of-the-Week", "No books found that meet your criteria.")
+    # Connect to the database
+    conn = sqlite3.connect('bookwarrior.db')
+    c = conn.cursor()
+
+    # Dynamically build the query
+    query = "SELECT * FROM books WHERE pages <= ? AND LOWER(format) = ?"
+    params = [max_pages, format_choice]
+
+    if picked_books:
+        placeholders = ','.join('?' * len(picked_books))
+        query += " AND title NOT IN ({})".format(placeholders)
+        params.extend(picked_books)
+
+    c.execute(query, params)
+    eligible_books = c.fetchall()
+
+    conn.close()
+
+    if not eligible_books:
+        return None
+
+    # Pick a random book
+    chosen_book = random.choice(eligible_books)
+    title, _, pages, _, _ = chosen_book
+
+    # Store the chosen book
+    with open("picked_books.txt", "a") as file:
+        file.write(title + "\n")
+
+    return title, pages
 
 # Main menu window
 def main_menu_window():
