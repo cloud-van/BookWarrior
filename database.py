@@ -64,7 +64,7 @@ def pick_book_of_the_week():
 
     c.execute(query, params)
     eligible_books = c.fetchall()
-    
+
     conn.close()
 
     if not eligible_books:
