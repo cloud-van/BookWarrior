@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox, simpledialog
-from database import add_book, view_library, pick_book_of_the_week
+from database import add_book, view_library, pick_book_of_the_week, add_note, get_notes
 import sqlite3
 import random
 import math
@@ -131,6 +131,55 @@ def pick_book_of_the_week(max_pages, format_choice):
 
     return title, pages
 
+def book_notes_gui():
+    def add_note_gui():
+        book_titles = [book[0] for book in view_library()]
+        if not book_titles:
+            messagebox.showinfo("No Books", "No books in the library to add a note.")
+            return
+
+        title = simpledialog.askstring("Add a Note", "Enter the book title:", initialvalue=book_titles[0])
+        if title not in book_titles:
+            messagebox.showinfo("Invalid Book", "The book title entered is not in the library.")
+            return
+
+        note = simpledialog.askstring("Add a Note", "Enter your note:")
+        add_note(title, note)
+        messagebox.showinfo("Note Added", "Your note has been added.")
+
+    def view_notes_gui():
+        book_titles = [book[0] for book in view_library()]
+        if not book_titles:
+            messagebox.showinfo("No Books", "No books in the library to view notes.")
+            return
+
+        title = simpledialog.askstring("View Notes", "Enter the book title:", initialvalue=book_titles[0])
+        if title not in book_titles:
+            messagebox.showinfo("Invalid Book", "The book title entered is not in the library.")
+            return
+
+        notes = get_notes(title)
+        notes_text = "\n".join(notes) if notes else "No notes for this book."
+        messagebox.showinfo("Notes for " + title, notes_text)
+
+    action = simpledialog.askstring("Book Notes", "Choose an action: Add a Note or View Notes")
+    if action.lower() == "add a note":
+        add_note_gui()
+    elif action.lower() == "view notes":
+        view_notes_gui()
+
+def setup_database():
+    conn = sqlite3.connect('bookwarrior.db')
+    c = conn.cursor()
+
+    c.execute("""CREATE TABLE IF NOT EXISTS books
+                 (title text, genre text, pages integer, format text, library text)""")
+    c.execute("""CREATE TABLE IF NOT EXISTS notes
+                 (title text, note text)""")
+
+    conn.commit()
+    conn.close()
+
 # Main menu window
 def main_menu_window():
     window = tk.Tk()
@@ -156,7 +205,11 @@ def main_menu_window():
     book_of_week_button = tk.Button(window, text="Pick Book-of-the-Week", command=pick_book_of_the_week_gui, width=button_width, height=button_height, font=button_font)
     book_of_week_button.pack(pady=10)
 
+    # Create add notes button
+    tk.Button(window, text="Book Notes", command=book_notes_gui, width=20, height=2, font=('Arial', 14)).pack(pady=10)
+
     window.mainloop()
 
 if __name__ == "__main__":
-    main_menu_window()
+    setup_database()  # Initialize the database and create tables
+    main_menu_window() # Start the GUI application

@@ -84,6 +84,21 @@ def pick_book_of_the_week():
 
     print(f"Your Book-of-the-Week will be {title}, you will need to reach {pages_per_week} pages per week to finish it.")
 
+def add_note(title, note):
+    conn = sqlite3.connect('bookwarrior.db')
+    c = conn.cursor()
+    c.execute("INSERT INTO notes VALUES (?, ?)", (title, note))
+    conn.commit()
+    conn.close()
+
+def get_notes(title):
+    conn = sqlite3.connect('bookwarrior.db')
+    c = conn.cursor()
+    c.execute("SELECT note FROM notes WHERE title = ?", (title,))
+    notes = c.fetchall()
+    conn.close()
+    return [note[0] for note in notes]
+
 
 def main_menu():
     while True:
@@ -118,6 +133,8 @@ def setup_database():
 
     c.execute("""CREATE TABLE IF NOT EXISTS books
                  (title text, genre text, pages integer, format text, library text)""")
+    c.execute("""CREATE TABLE IF NOT EXISTS notes
+                 (title text, note text)""")
 
     conn.commit()
     conn.close()
